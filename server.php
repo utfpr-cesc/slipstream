@@ -1023,7 +1023,7 @@ if (!String.prototype.padStart) {
     };
 }
 
-// to fix DOM-based XSS issues - https://samy.pl/slipstream/server?localip=1.1.1.1<img src onerror%3dalert(1)>
+// to fix DOM-based XSS issues - https://samy.pl/slipstream/server.php?localip=1.1.1.1<img src onerror%3dalert(1)>
 function htmlEncodeSpecial(value) {
     return value.replace(/</gi,'&lt;').replace(/>/gi,'&gt;').replace(/&lt;([a-zA-Z])&gt;/gi,'\<$1\>').replace(/&lt;\/([a-zA-Z])&gt;/gi,'</$1>');
 }
