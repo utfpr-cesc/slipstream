@@ -720,7 +720,7 @@ function go(type)
 
 function nlog(str)
 {
-	post('//samy.pl/natpin/nlog', str)
+	post('//samy.pl/natpin/nlog.php', str)
 }
 function gather(sc)
 {
