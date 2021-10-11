@@ -322,7 +322,7 @@ function log(msg)
 	document.getElementById('log').innerHTML = htmlEncodeSpecial(msg) + '<br>' + document.getElementById('log').innerHTML
 }
 
-// called by get_size script tag upon load
+// called by get_size.php script tag upon load
 function set_bytes(bytes)
 {
 	var txt = JSON.stringify(bytes).replace(/,/g, ', ').replace(/"/g, '')
@@ -355,7 +355,7 @@ function getSize()
 {
 	var scr = document.createElement('script')
 	scr.type = 'text/javascript'
-	scr.src = '//samy.pl/natpin/get_size?id=' + rand + '&rand=' + rnd()
+	scr.src = '//samy.pl/natpin/get_size.php?id=' + rand + '&rand=' + rnd()
 	log('requesting sniffed packet sizes from server')
 	document.head.appendChild(scr)
 }
