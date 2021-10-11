@@ -480,10 +480,10 @@ function tryConnect()
 {
 	log('running: nc -v <?php echo getenv('REMOTE_ADDR') ?> ' + port)
 	log('\n<b>attempting to bypass your NAT/firewall</b>')
-	addScript('//samy.pl/natpin/connect?id=' + rand + '&port=' + port)
+	addScript('//samy.pl/natpin/connect.php?id=' + rand + '&port=' + port)
 }
 
-// called from /connect (along with some log()s)
+// called from /connect.pl (along with some log()s)
 function connectDone()
 {
 	nlog(document.getElementById('log').innerHTML)
