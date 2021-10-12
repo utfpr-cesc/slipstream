@@ -37,7 +37,7 @@ my $PAD = "^_"; # \r\n";
 my $SCAN = 'SAMY_MAXPKTSIZE';
 my $BEGIN = "BEGIN_$SCAN=";
 my $END = "END_$SCAN";
-my $SIPURL = 'sip:samy.pl;transport';
+my $SIPURL = 'sip:myappserver.edu;transport';
 my $filter_str = "port 5060";
 my $err = '';
 my $dev = pcap_lookupdev(\$err);  # find a device
@@ -157,7 +157,7 @@ sub process_packet
       addUser($max{$pktid}{id}, %{$max{$pktid}});
     }
 
-    # look for sip:samy.pl;transport SIP REGISTER packet
+    # look for sip:myappserver.edu;transport SIP REGISTER packet
     $ind = index($packet, $SIPURL);
     if ($ind >= 0)
     {
@@ -170,7 +170,7 @@ sub process_packet
       my $dh = $data;
       $dh =~ s/([^\w ])/"\\x" . unpack("H2", $1)/eg;
 
-      my $file = "/tmp/.samy.regoff.$cid";
+      my $file = "./tmp/.samy.regoff.$cid";
       my $origoffset = $offset;
 
       # our vm provider is merging these packest before reaching system even though ender has it broken up into diff packs
@@ -215,7 +215,7 @@ sub sip_udp_respond
   $resp =~ s/\{(.*?)\}/$vars{$1}/eg;
   $resp .= "\r\n";
 
-  my $rndfile = "/tmp/.samy.rndout." . time() . rand();
+  my $rndfile = "./tmp/.samy.rndout." . time() . rand();
   wf($rndfile, $resp);
 
   # don't specify ethernet dev, otherwies you need to specify dest mac
@@ -278,7 +278,7 @@ sub addUser
   foreach my $key (keys %len) { $len{$key} =~ s/\D//g; }
   print "$id: " . Dumper(\%len) . "\n";
 
-  wf("/tmp/.samy.pktsize.$id", encode_json(\%len));
+  wf("./tmp/.samy.pktsize.$id", encode_json(\%len));
 }
 
 __DATA__

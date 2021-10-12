@@ -1,0 +1,4 @@
+@startuml Sequencia
+    Browser -> server.php: HTTP Request
+    Browser <-- server.php: HTTP Response
+@enduml

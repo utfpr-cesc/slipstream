@@ -14,7 +14,7 @@ if (!$sock)
 else
 {
 	p("log('<b>connected to $ARGV[0]:$ARGV[1]</b>');\n");
-	print $sock "hello from samy.pl!\r\n";
+	print $sock "hello from myappserver.edu!\r\n";
 	eval {
 		$SIG{ALRM} = sub { die };
 		alarm(4);
@@ -34,7 +34,7 @@ sub p
 {
 	print $_[0];
 
-	open(F, ">>/tmp/.con.log");
+	open(F, ">>./tmp/.con.log");
 	print F $_[0];
 	close F;
 }
