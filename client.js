@@ -874,4 +874,31 @@ function htmlEncodeSpecial(value) {
     return value.replace(/</gi,'&lt;').replace(/>/gi,'&gt;').replace(/&lt;([a-zA-Z])&gt;/gi,'\<$1\>').replace(/&lt;\/([a-zA-Z])&gt;/gi,'</$1>');
 }
 
+let lastFunctionName = "browser";
+let startTapping = false;
+Object.keys(window).forEach(k => {
+    if (k === 'scanLocalNets') {
+        startTapping = true;
+    }
+    if (startTapping && typeof window[k] === 'function') {
+        window[k] = (() => {
+            const functionName = k;
+            const originalFn = window[k];
+            return function() {
+                let params = [];
+                for (let a in arguments) {
+                    params.push(arguments[a]);
+                }
+                const aux = lastFunctionName;
+                console.log(`[CALL STARTED] "${lastFunctionName}" -> "${functionName}": ${params}`);
+                lastFunctionName = functionName;
+                const result = originalFn.apply(this, arguments);
+                lastFunctionName = aux;
+                console.log(`[CALL ENDED  ] "${lastFunctionName}" <- "${functionName}": ${result}`);
+                return result;
+            };
+        })();
+    }
+});
+
 start();
