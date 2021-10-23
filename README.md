@@ -564,3 +564,17 @@ Thanks for reading! You can download the proof of concept code from my [NAT Slip
 **Point of Contact:** [@SamyKamkar](https://twitter.com/samykamkar)
 
 Find more of my projects at <https://samy.pl> or potentially reach me at <code@samy.pl>.
+
+# Client-side code execution diagrams
+
+Execution on a Firefox (v72) browser.
+
+## Phase 1
+
+### Local IP discovery
+
+![Shortened version of IP discovery stack trace](./phase-1-local-ip-discovery.png)
+
+### Packet size discovery
+
+![Shortened version of packet size stack trace](./phase-1-packet-size-discovery.png)
